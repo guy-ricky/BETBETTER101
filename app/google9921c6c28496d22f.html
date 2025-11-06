@@ -1,0 +1,14 @@
+// src/app/google9921c6c28496d22f.html
+export const runtime = "edge";
+
+// This route returns the plain text required by Google
+export default function Page() {
+  return new Response(
+    "google-site-verification: google9921c6c28496d22f.html",
+    {
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    }
+  );
+}

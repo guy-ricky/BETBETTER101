@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://betbetter101.com
+
+# Sitemaps
+Sitemap: https://betbetter101.com/sitemap.xml

@@ -1,0 +1,295 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* === Brand (as before) === */
+:root {
+  --background: #111827;
+  --foreground: #ffffff;
+
+  --primary-green: #00ff66;
+  --primary-gold: #ffd700;
+
+  --gray-800: #1f2937;
+  --gray-700: #374151;
+  --gray-600: #4b5563;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+
+  /* === shadcn/ui tokens mapped to your palette (no dark mode) === */
+  --card: var(--gray-800);
+  --card-foreground: var(--foreground);
+
+  --popover: var(--gray-800);
+  --popover-foreground: var(--foreground);
+
+  --primary: var(--primary-green);
+  --primary-foreground: #0a0a0a;
+
+  --secondary: var(--primary-gold);
+  --secondary-foreground: #0a0a0a;
+
+  --muted: var(--gray-700);
+  --muted-foreground: var(--gray-300);
+
+  --accent: var(--primary-green);
+  --accent-foreground: #0a0a0a;
+
+  --destructive: #ef4444; /* red-500 */
+  --destructive-foreground: #ffffff;
+
+  --border: var(--gray-700);
+  --input: var(--gray-800);
+  --ring: #22c55e; /* green-500-ish */
+
+  --radius: 10px; /* 0.625rem */
+}
+
+/* If you're on Tailwind v4 and were using inline theme tokens before, keep it simple. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary-green);
+  --color-secondary: var(--primary-gold);
+  --color-accent: var(--primary-green);
+  --color-muted: var(--gray-600);
+  --color-border: var(--gray-700);
+  --color-input: var(--gray-800);
+  --color-card: var(--gray-800);
+  --color-popover: var(--gray-800);
+  --font-sans: var(--font-poppins);
+  --font-mono: var(--font-poppins);
+  /* radius helpers used by some shadcn components */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Base (no global element overrides) */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Poppins", sans-serif;
+}
+
+/* Optional: dark theme base + article polish */
+html.dark {
+  color-scheme: dark;
+}
+/* Typography polish */
+.prose :where(h1, h2, h3) {
+  letter-spacing: -0.01em;
+}
+.prose h2 {
+  font-size: 1.6rem;
+  margin-top: 2.2rem;
+  margin-bottom: 0.8rem;
+}
+.prose h3 {
+  font-size: 1.25rem;
+  margin-top: 1.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.prose p {
+  color: #cbd5e1;
+  line-height: 1.8;
+}
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.25);
+}
+.prose a:hover {
+  text-decoration-color: #00ff66;
+}
+
+.prose blockquote {
+  border-left: 3px solid #00ff66;
+  padding-left: 1rem;
+  color: #e5e7eb;
+  background: linear-gradient(to right, rgba(0, 255, 102, 0.06), transparent);
+  border-radius: 0.5rem;
+}
+
+.prose img {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prose code:not(pre code) {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.prose pre {
+  background: #0b0b0b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1rem 1rem;
+  overflow: auto;
+}
+
+.prose ul > li::marker {
+  color: #00ff66;
+}
+.prose ol > li::marker {
+  color: #00ff66;
+}
+
+/* Subtle fade-in for MDXClient wrapper */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== Your existing utilities ===== */
+.bg-brb-dark {
+  background-color: #111111;
+}
+.bg-brb-green {
+  background-color: #00ff66;
+}
+.bg-brb-gold {
+  background-color: #ffd700;
+}
+
+.text-brb-green {
+  color: #00ff66;
+}
+.text-brb-gold {
+  color: #ffd700;
+}
+
+.border-brb-green {
+  border-color: #00ff66;
+}
+.border-brb-gold {
+  border-color: #ffd700;
+}
+
+/* Gradients */
+.bg-brb-gradient {
+  background: linear-gradient(to right, #00ff66, #ffd700);
+}
+.bg-brb-gradient-reverse {
+  background: linear-gradient(to right, #ffd700, #00ff66);
+}
+
+/* Hovers */
+.hover-brb-green:hover {
+  background-color: #00e055;
+}
+.hover-brb-gold:hover {
+  background-color: #e6c200;
+}
+
+/* Shadows */
+.shadow-brb-green {
+  box-shadow: 0 4px 14px 0 rgba(0, 255, 102, 0.25);
+}
+.shadow-brb-gold {
+  box-shadow: 0 4px 14px 0 rgba(255, 215, 0, 0.25);
+}
+
+/* Pulses */
+@keyframes pulse-green {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes pulse-gold {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.animate-pulse-green {
+  animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.animate-pulse-gold {
+  animation: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+::-webkit-scrollbar-thumb {
+  background: #00ff66;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00e055;
+}
+
+/* Selection */
+::selection {
+  background-color: #00ff66;
+  color: #111111;
+}
+::-moz-selection {
+  background-color: #00ff66;
+  color: #111111;
+}
+
+/* Focus helper */
+.fab-focus:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes modalIn {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-modal-in {
+  animation: modalIn 0.2s ease-out forwards;
+}
+
+@media (max-width: 640px) {
+  .animation-delay-2000,
+  .animation-delay-4000 {
+    animation-delay: 0s;
+  }
+}

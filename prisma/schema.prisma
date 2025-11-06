@@ -1,0 +1,326 @@
+// ------------- Prisma Client & Datasource -------------
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ------------- Enums (existing) -------------
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TicketCategory {
+  BILLING
+  SUBSCRIPTION
+  TECHNICAL
+  ACCOUNT
+  OTHER
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+  TRIALING
+  EXPIRED
+}
+
+// ------------- Enums (new for referrals) -------------
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  REVERSED
+}
+
+enum PayoutStatus {
+  DRAFT
+  PROCESSING
+  PAID
+  FAILED
+}
+
+// ------------- Core Models (existing + tiny additions) -------------
+model User {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  clerkUserId  String  @unique
+  email        String  @unique
+  password     String?
+  username     String?
+  avatar       String? @default("https://i.pinimg.com/736x/af/2f/7c/af2f7c0b2abfb0bfd94c7c57ffeb0e39.jpg")
+  role         Role    @default(USER)
+  isSubscribed Boolean @default(false)
+
+  // Paddle linkage
+  paddleCustomerId String?
+  paddleEmail      String?
+
+  // Paystack linkage
+  paystackCustomerCode String?
+  paystackAuthCode     String?
+
+  // Relations
+  payments           Payment[]
+  telegramLinkTokens TelegramLinkToken[]
+  subscriptions      Subscription[]
+  Ticket             Ticket[]
+
+  // Referral program (new)
+  referredByAffiliateId String?   @db.ObjectId
+  firstPaidAt           DateTime?
+
+  // Misc
+  telegramChatId   String?
+  telegramUsername String?
+  telegramLinkedAt DateTime?
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Commission Commission[]
+  Affiliate  Affiliate[]
+
+  @@index([telegramChatId])
+  @@index([paddleCustomerId])
+  @@index([referredByAffiliateId])
+  @@index([firstPaidAt])
+}
+
+model Subscription {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  productName String?
+
+  // Paystack linkage
+  paystackSubscriptionCode String?
+  paystackCustomerCode     String?
+  paystackPlanCode         String?
+  paystackEmailToken      String?
+
+  status          SubscriptionStatus
+  currency        String
+  unitAmountMinor Int
+  interval        String
+  intervalCount   Int
+
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+  canceledAt         DateTime?
+
+  // Referral denorm (new, optional)
+  affiliateId String? @db.ObjectId
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Commission Commission[]
+
+  @@index([status])
+  @@index([affiliateId])
+}
+
+model Payment {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  amount    Float
+  method    String
+  status    String
+  reference String
+  provider  String   @default("paystack")
+  createdAt DateTime @default(now())
+
+  currency        String?
+  fxRateToGBP     Float?
+  amountMinor     Int?
+  chargedCurrency String?
+
+  // Referral denorm (new)
+  affiliateId  String?      @db.ObjectId
+  commissionId String?      @db.ObjectId
+  Commission   Commission[] @relation("CommissionPayment")
+
+  @@index([userId])
+  @@index([reference, provider])
+  @@index([affiliateId])
+}
+
+model TelegramLinkToken {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  token String @unique
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Ticket {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String          @db.ObjectId
+  user      User?           @relation(fields: [userId], references: [id])
+  subject   String
+  category  TicketCategory  @default(OTHER)
+  priority  TicketPriority  @default(MEDIUM)
+  status    TicketStatus    @default(OPEN)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  messages  TicketMessage[]
+}
+
+model TicketMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  ticketId  String   @db.ObjectId
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  authorId  String
+  body      String
+  isStaff   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ------------- Predictions (existing) -------------
+model Prediction {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  fixtureId     Int      @unique
+  leagueId      Int
+  leagueSlug    String
+  date          DateTime
+  homeTeam      String
+  awayTeam      String
+  predictedHome Int
+  predictedAway Int
+  pick          String
+  impliedOdds   Float?
+
+  status     String?
+  actualHome Int?
+  actualAway Int?
+  outcome    String?
+  exactHit   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leagueSlug, date])
+}
+
+// ------------- NEW: Referral / Affiliate Models -------------
+model Affiliate {
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId String? @db.ObjectId
+  user   User?   @relation(fields: [userId], references: [id])
+
+  name  String
+  email String?
+  code  String  @unique // used in ?ref=code
+
+  // commercial terms (optional overrides)
+  ratePct   Float?
+  flatMinor Int?
+  currency  String? // default intended "GBP"
+
+  isActive Boolean @default(true)
+
+  // lightweight metrics (denormalized counters)
+  clicks        Int @default(0)
+  conversions   Int @default(0)
+  lifetimeMinor Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // back-relations (implicit)
+  referralClicks ReferralClick[]
+  commissions    Commission[]
+  payouts        Payout[]
+}
+
+model ReferralClick {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  affiliateId String    @db.ObjectId
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id])
+
+  ip       String?
+  ua       String?
+  referrer String?
+
+  createdAt DateTime @default(now())
+
+  @@index([affiliateId, createdAt])
+}
+
+model Commission {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  affiliateId String    @db.ObjectId
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id])
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  // anchor to commerce rows
+  paymentId      String?       @db.ObjectId
+  payment        Payment?      @relation("CommissionPayment", fields: [paymentId], references: [id])
+  subscriptionId String?       @db.ObjectId
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  // money (normalized)
+  currency    String
+  amountMinor Int
+
+  status    CommissionStatus @default(PENDING)
+  reason    String?
+  holdUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([affiliateId, paymentId, userId])
+  @@index([affiliateId, status])
+  @@index([userId])
+}
+
+model Payout {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  affiliateId String    @db.ObjectId
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id])
+
+  status      PayoutStatus @default(DRAFT)
+  currency    String
+  amountMinor Int
+  note        String?
+
+  // store Commission ids included in this payout (non-relational array)
+  commissionIds String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([affiliateId, status])
+}
