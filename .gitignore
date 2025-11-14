@@ -51,3 +51,4 @@ part2.json
 
 .cache/
 .tmp/
+.env
